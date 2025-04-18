@@ -51,7 +51,38 @@ export class Intersection {
         return lanes;
     }
 
+    canTurnAround() 
+    {
+        return this.connectedRoads.length <= 1;
+    }
+
+    getLanesAvailableFrom(incoming_lane)
+    {
+        if (incoming_lane.isOutgoingFrom(this))
+            return [];
+
+        if (incoming_lane.road.startIntersection != this && incoming_lane.road.endIntersection != this)
+            return [];
+
+        let available_lanes = [];
+
+        for (let lane of this.getConnectedLanes())
+        {
+            if (lane.isOutgoingFrom(this) && lane.road != incoming_lane.road)
+                available_lanes.push(lane);
+
+            if (lane.isOutgoingFrom(this) && this.canTurnAround())
+                available_lanes.push(lane);
+        }
+
+        return available_lanes;
+    }
+
+    equals(other)
+    {
+        return this == other || Math.abs(other.x - this.x) < 0.1 && Math.abs(other.y - this.y) < 0.1;
+    }
+
     // TODO: get out Lanes
     // TODO: get in Lanes
-    // TODO: getLanesAvailableFrom
 }

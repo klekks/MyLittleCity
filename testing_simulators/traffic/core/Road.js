@@ -2,86 +2,74 @@ import { Lane } from "./Lane.js"
 
 
 class Segment {
-  constructor() {
-    this.occupied = false;
-  }
+    constructor() {
+        this.occupied = false;
+    }
 
-  isOccupied() {
-    return this.occupied;
-  }
+    isOccupied() {
+        return this.occupied;
+    }
 
-  occupy() {
-    this.occupied = true;
-  }
+    occupy() {
+        this.occupied = true;
+    }
 
-  release() {
-    this.occupied = false;
-  }
+    release() {
+        this.occupied = false;
+    }
 }
 
 
 export class Road {
-  static idCounter = 0;
-  constructor(startIntersection, endIntersection, segmentCount = 10) {
-    this.id = Road.idCounter++;
+    static idCounter = 0;
+    constructor(startIntersection, endIntersection, segmentCount = 10) {
+        this.id = Road.idCounter++;
 
-    this.startIntersection = startIntersection;
-    this.endIntersection = endIntersection;
-    this.segmentCount = segmentCount;
+        this.startIntersection = startIntersection;
+        this.endIntersection = endIntersection;
+        this.segmentCount = segmentCount;
 
-    this.forwardSegments = Array.from({ length: segmentCount }, () => new Segment());
-    this.backwardSegments = Array.from({ length: segmentCount }, () => new Segment());
+        this.forwardSegments = Array.from({ length: segmentCount }, () => new Segment());
+        this.backwardSegments = Array.from({ length: segmentCount }, () => new Segment());
 
-    this.startIntersection.connectRoad(this);
-    this.endIntersection.connectRoad(this);
-  }
+        this.startIntersection.connectRoad(this);
+        this.endIntersection.connectRoad(this);
+    }
 
-  isDirectionAllowed(direction) {
-    // При правостороннем движении обе стороны разрешены
-    // (но каждая имеет своё направление)
-    return direction === 1 || direction === -1;
-  }
+    getLanes() {
+        return [new Lane(this, 1), new Lane(this, -1)];
+    }
 
-  getAvailableDirectionsFrom(intersection) {
-    if (intersection === this.startIntersection) return [1];
-    if (intersection === this.endIntersection) return [-1];
-    return [];
-  }
+    getPointAtRatio(ratio) {
+        const x = this.startIntersection.x + (this.endIntersection.x - this.startIntersection.x) * ratio;
+        const y = this.startIntersection.y + (this.endIntersection.y - this.startIntersection.y) * ratio;
+        return { x, y };
+    }
 
-  getLanes() {
-    return [new Lane(this, 1), new Lane(this, -1)];
-  }
+    findClosestPointOnRoad(x, y) {
+        const x1 = this.startIntersection.x;
+        const y1 = this.startIntersection.y;
+        const x2 = this.endIntersection.x;
+        const y2 = this.endIntersection.y;
 
-  getPointAtRatio(ratio) {
-    const x = this.startIntersection.x + (this.endIntersection.x - this.startIntersection.x) * ratio;
-    const y = this.startIntersection.y + (this.endIntersection.y - this.startIntersection.y) * ratio;
-    return { x, y };
-  }
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const lengthSq = dx * dx + dy * dy;
 
-  findClosestPointOnRoad(x, y) {
-    const x1 = this.startIntersection.x;
-    const y1 = this.startIntersection.y;
-    const x2 = this.endIntersection.x;
-    const y2 = this.endIntersection.y;
+        if (lengthSq === 0) return null;
 
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const lengthSq = dx * dx + dy * dy;
+        let t = ((x - x1) * dx + (y - y1) * dy) / lengthSq;
+        t = Math.max(0, Math.min(1, t));
 
-    if (lengthSq === 0) return null;
+        const px = x1 + t * dx;
+        const py = y1 + t * dy;
 
-    let t = ((x - x1) * dx + (y - y1) * dy) / lengthSq;
-    t = Math.max(0, Math.min(1, t));
+        return { x: px, y: py, ratio: t };
+    }
 
-    const px = x1 + t * dx;
-    const py = y1 + t * dy;
-
-    return { x: px, y: py, ratio: t };
-  }
-
-  getLength() {
-    const dx = this.endIntersection.x - this.startIntersection.x;
-    const dy = this.endIntersection.y - this.startIntersection.y;
-    return Math.hypot(dx, dy);
-  }
+    getLength() {
+        const dx = this.endIntersection.x - this.startIntersection.x;
+        const dy = this.endIntersection.y - this.startIntersection.y;
+        return Math.hypot(dx, dy);
+    }
 }

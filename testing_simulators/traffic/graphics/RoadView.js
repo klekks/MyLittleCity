@@ -77,38 +77,32 @@ export class RoadView extends Road {
     ctx.textAlign = "center";
     ctx.fillText(`R${this.id}`, midX, midY - 8);
 
-
-
-
     // Рисуем занятые сегменты
-const segmentRadius = 3;
+  const segmentRadius = 3;
 
-// Направление: start → end
-this.forwardSegments.forEach((segment, index) => {
-  if (segment.occupied) {
-    const lane = new Lane(this, 1);
-    const pos = lane.getPointAtDistance((index + 0.5) * this.getLength() / this.segmentCount);
-    ctx.beginPath();
-    ctx.arc(pos.x - ny * 5, pos.y + nx * 5, segmentRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "red";
-    ctx.fill();
-  }
-});
+  // Направление: start → end
+  this.forwardSegments.forEach((segment, index) => {
+    if (segment.occupied) {
+      const lane = new Lane(this, 1);
+      const pos = lane.getPointAtDistance((index + 0.5) * this.getLength() / this.segmentCount);
+      ctx.beginPath();
+      ctx.arc(pos.x - ny * 5, pos.y + nx * 5, segmentRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+    }
+  });
 
-// Направление: end → start
-this.backwardSegments.forEach((segment, index) => {
-  if (segment.occupied) {
-    const lane = new Lane(this, -1);
-    const pos = lane.getPointAtDistance((index + 0.5) * this.getLength() / this.segmentCount);
-    ctx.beginPath();
-    ctx.arc(pos.x + ny * 5, pos.y - nx * 5, segmentRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "red";
-    ctx.fill();
-  }
-});
-
-
-
+  // Направление: end → start
+  this.backwardSegments.forEach((segment, index) => {
+    if (segment.occupied) {
+      const lane = new Lane(this, -1);
+      const pos = lane.getPointAtDistance((index + 0.5) * this.getLength() / this.segmentCount);
+      ctx.beginPath();
+      ctx.arc(pos.x + ny * 5, pos.y - nx * 5, segmentRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+    }
+  });
 
     this.startIntersection.draw(ctx);
     this.endIntersection.draw(ctx);
@@ -121,7 +115,6 @@ this.backwardSegments.forEach((segment, index) => {
     const dx = toX - fromX;
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
-    const len = Math.hypot(dx, dy);
 
     const midX = fromX + dx * 0.5;
     const midY = fromY + dy * 0.5;
