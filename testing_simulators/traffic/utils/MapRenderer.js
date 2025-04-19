@@ -233,7 +233,7 @@ export class MapRenderer {
 
     render() 
     {
-        if (this.needRedrawStatic) 
+        //if (this.needRedrawStatic) 
         {
             this.drawStaticObjects();
         }

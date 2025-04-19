@@ -4,13 +4,15 @@ import { Lane } from "./Lane.js"
 class Segment {
     constructor() {
         this.occupied = false;
+        this.occupier = null;
     }
 
     isOccupied() {
         return this.occupied;
     }
 
-    occupy() {
+    occupy(occupier) {
+        this.occupied_by = occupier;
         this.occupied = true;
     }
 

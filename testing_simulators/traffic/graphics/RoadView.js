@@ -72,8 +72,8 @@ export class RoadView extends Road {
     const midY = (start.y + end.y) / 2;
 
     
-    ctx.fillStyle = "black";
-    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "green";
+    ctx.font = "14px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(`R${this.id}`, midX, midY - 8);
 

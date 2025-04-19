@@ -12,8 +12,19 @@ import {
 //window.addEventListener("contextmenu", e => e.preventDefault());
 
 
-const BUILDING_GRID_STEP_PX = 30;
+function car_queue_driver()
+{
+    let data = CarView.queue_pop();
+    if (data)
+    {
+        let [object, method, args] = data;  
+        object[method](...args);
+    }
+}
 
+
+const BUILDING_GRID_STEP_PX = 30;
+export let renderer;
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -23,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const renderer = new MapRenderer(canvas, ctx);
+    renderer = new MapRenderer(canvas, ctx);
 
     let isDrawing = false;
     let startPoint = null;
@@ -215,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     requestAnimationFrame(animate);
+    setInterval(car_queue_driver, 100);
     
 
 }, false);

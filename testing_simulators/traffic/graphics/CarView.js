@@ -1,31 +1,36 @@
 import { Car } from '../core/Car.js';
 
 export class CarView extends Car {
-  draw(ctx) {
-    if (this.finished) return;
+    draw(ctx) {
+        if (this.finished || !this.displaiable) return;
+        let currentLane = this.path[this.currentLaneIndex];
 
-    const road = this.currentLane.road;
-    const dx = road.endIntersection.x - road.startIntersection.x;
-    const dy = road.endIntersection.y - road.startIntersection.y;
-    const fullLength = Math.hypot(dx, dy);
-    const segmentLength = fullLength * Math.abs(this.endRatio - this.startRatio);
-    const ratioOffset = this.progress / segmentLength;
+        const laneRatio = this.progress / currentLane.getLength();
 
-    const t = this.startRatio + (this.endRatio - this.startRatio) * ratioOffset;
-    const { x, y } = road.getPointAtRatio(t);
+        const dx = currentLane.getEndIntersection().x - currentLane.getStartIntersection().x;
+        const dy = currentLane.getEndIntersection().y - currentLane.getStartIntersection().y;
+        const fullLength = currentLane.getLength();
 
-    const perpX = -dy / fullLength;
-    const perpY = dx / fullLength;
-    const offsetX = perpX * (this.currentLane.direction === 1 ? 5 : -5);
-    const offsetY = perpY * (this.currentLane.direction === 1 ? 5 : -5);
+        const { x, y } = currentLane.getPointAtRatio(laneRatio);
 
-    ctx.fillStyle = "blue";
-    ctx.save();
-    ctx.translate(x + offsetX, y + offsetY);
-    ctx.rotate(Math.atan2(dy, dx));
-    ctx.fillStyle = "blue";
-    ctx.fillRect(-4, -2, 8, 4);  // прямоугольник вместо точки
-    ctx.restore();
+        const perpX = -dy / fullLength;
+        const perpY = dx / fullLength;
+        const offsetX = perpX * 5;
+        const offsetY = perpY * 5;
 
-  }
+        ctx.fillStyle = "blue";
+        ctx.save();
+        ctx.translate(x + offsetX, y + offsetY);
+        ctx.rotate(Math.atan2(dy, dx));
+        ctx.fillStyle = "blue";
+        ctx.fillRect(-4, -2, 8, 4);  // прямоугольник вместо точки
+
+    
+        ctx.fillStyle = "red";
+        ctx.font = "12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`${this.id}`, 0, 0);
+        ctx.restore();
+
+    }
 }

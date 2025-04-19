@@ -38,6 +38,26 @@ export class Lane {
 
     getPointAtDistance(distance) {
         const ratio = distance / this.getLength();
-        return this.road.getPointAtRatio(this.direction === 1 ? ratio : 1 - ratio);
+        return this.getPointAtRatio(ratio);
+    }
+
+    getPointAtRatio(ratio)
+    {
+        if (this.direction == 1)
+            return this.road.getPointAtRatio(ratio)
+        else 
+            return this.road.getPointAtRatio(1 - ratio);
+    }
+
+    getLaneRatioAtRoadRatio(ratio)
+    {
+        return this.direction === 1 ? ratio : 1 - ratio;
+    }
+
+    getSegments()
+    {
+        return this.direction === 1
+                ? this.road.forwardSegments
+                : this.road.backwardSegments;
     }
 }

@@ -1,20 +1,35 @@
 import { find_path } from "../utils/Pathfinding.js"
 
 export class Car {
+    // TODO: random speed
+    // TODO: aceleration
+    static taskQueue = [];
+    static idx = 0;
     constructor(fromBuilding, toBuilding) {
+        this.id = Car.idx++;
         this.from = fromBuilding;
         this.to = toBuilding;
-        this.speed = 0.5 + Math.random();
+        this.speed = 1;// + Math.random() % 0.2;
+        this.displaiable = false;
+        this.path = this.findValidPath(fromBuilding, toBuilding);
 
-        const path = this.findValidPath(fromBuilding, toBuilding);
-
-        if (!path) {
+        if (!this.path) {
             console.warn("Маршрут не найден");
             this.finished = true;
             return;
         }
 
-        this.initializeMovement(path, fromBuilding, toBuilding);
+        this.queue_push("initializeMovement", [fromBuilding, toBuilding]);
+    }
+
+    static queue_pop()
+    {
+        return Car.taskQueue.shift();
+    }
+
+    queue_push(name, args)
+    {
+        Car.taskQueue.push([this, name, args]);
     }
 
     findValidPath(fromBuilding, toBuilding) {
@@ -22,144 +37,126 @@ export class Car {
         const toLane = toBuilding.side === 1 ? toBuilding.road.getLanes()[0] : toBuilding.road.getLanes()[1];
         const path = find_path(fromLane, fromBuilding.ratio, toLane, toBuilding.ratio);
 
-
         if (path.length === 0) {
             console.warn("Маршрут не найден");
             this.finished = true;
             return;
         }
-        console.log(path.map((e) => { return e.road.id; }))
+        // console.log(path.map((e) => { return e.road.id; }))
 
         return path;
     }
 
 
-    initializeMovement(path, fromBuilding, toBuilding) {
-        this.lanePath = path;
-        this.lanePathIndex = 0;
-        this.currentLane = path[0];
+    initializeMovement(fromBuilding, toBuilding) {
+        // console.log(this.from.id, this.to.id);
+        this.currentLaneIndex = 0;
+        let currentLane = this.path[this.currentLaneIndex];
 
-        this.startRatio = fromBuilding.ratio;
-        this.endRatio = (path.length === 1)
-            ? toBuilding.ratio
-            : (this.currentLane.direction === 1 ? 1 : 0);
+        this.startAtLaneRatio = currentLane.getLaneRatioAtRoadRatio(fromBuilding.ratio); 
+         
+        if (this.path.length == 1)
+        {
+            this.endAtLaneRatio = currentLane.getLaneRatioAtRoadRatio(toBuilding.ratio);
+        }
+        else
+        {
+            this.endAtLaneRatio = currentLane.getLaneRatioAtRoadRatio(currentLane.direction == 1 ? 1 : 0);
+        }
 
-        const segments = this.currentLane.direction === 1
-            ? this.currentLane.road.forwardSegments
-            : this.currentLane.road.backwardSegments;
+        let currentRatio = this.startAtLaneRatio;
+        let laneSegments = currentLane.getSegments();
+        this.currentSegmentIndex = Math.floor(currentRatio * laneSegments.length);
 
-        const segmentCount = segments.length;
+        if (laneSegments[this.currentSegmentIndex].isOccupied())
+        {
+            this.queue_push("initializeMovement", [fromBuilding, toBuilding]);
+            return;
+        }
+        laneSegments[this.currentSegmentIndex].occupy(this);
 
-        this.segmentIndex = Math.floor(
-            (this.currentLane.direction === 1
-                ? this.startRatio
-                : (1 - this.startRatio)) * segmentCount
-        );
+        this.progress = currentRatio * currentLane.getLength();
 
-        segments[this.segmentIndex].occupy();
-
-        this.progress = 0;
         this.finished = false;
+        this.displaiable = true;
 
-        const roadIds = path.map(lane => `${lane.direction === 1 ? "→" : "←"}R${lane.road.id}`);
+        const roadIds = this.path.map(lane => `${lane.direction === 1 ? "→" : "←"}R${lane.road.id}`);
         console.log(`Маршрут машины ${fromBuilding.id} → ${toBuilding.id}:`, roadIds.join(" "));
     }
 
+    getNextPosition()
+    {
+        let currentLane = this.path[this.currentLaneIndex];
+        let newProgress = this.progress + this.speed;
+        let newRatio = newProgress / currentLane.getLength();
 
+        let newLane = null;
+        let newStartAtLaneRatio = null, newEndAtLaneRatio = null, newSegmentIndex = null, newLaneIndex = null;
+        if (newRatio >= this.endAtLaneRatio)
+        {
+            if (this.currentLaneIndex + 1 >= this.path.length)
+            {
+                return null;
+            }
+            newLaneIndex = this.currentLaneIndex + 1;
+            newLane = this.path[newLaneIndex];
+            newStartAtLaneRatio = 0;
+            newEndAtLaneRatio = (newLaneIndex + 1 == this.path.length) 
+                                ? newLane.getLaneRatioAtRoadRatio(this.to.ratio) 
+                                : 1;
+            newProgress = 0;
+            newSegmentIndex = 0; 
+        }  
+        else
+        {
+            newLane = currentLane;
+            newLaneIndex = this.currentLaneIndex;
+            newStartAtLaneRatio = this.startAtLaneRatio;
+            newEndAtLaneRatio = this.endAtLaneRatio;
+            newSegmentIndex = Math.floor(newRatio * newLane.getSegments().length);
+        } 
+
+        return [
+            newLaneIndex,
+            newStartAtLaneRatio,
+            newEndAtLaneRatio,
+            newProgress,
+            newSegmentIndex
+        ];
+    }
 
     update() {
-        if (this.finished) return;
+        if (this.finished || !this.displaiable) return;
 
-        const road = this.currentLane.road;
-        const segments = this.currentLane.direction === 1
-            ? this.currentLane.road.forwardSegments
-            : this.currentLane.road.backwardSegments;
-
-        const segmentCount = segments.length;
-
-        const movingForward = this.endRatio > this.startRatio;
-        const fullLength = Math.hypot(
-            road.endIntersection.x - road.startIntersection.x,
-            road.endIntersection.y - road.startIntersection.y
-        );
-        const segmentLength = Math.abs(this.endRatio - this.startRatio) * fullLength;
-
-        // Продвигаем машину
-        this.progress += this.speed;
-
-        // Рассчитываем текущее положение вдоль линии
-        const currentRatio = this.startRatio + (this.endRatio - this.startRatio) * (this.progress / segmentLength);
-        const clampedRatio = Math.max(0, Math.min(1, currentRatio));
-        let segmentIndex;
-        if (this.currentLane.direction === 1) {
-            segmentIndex = Math.min(
-                segmentCount - 1,
-                Math.floor(clampedRatio * segmentCount)
-            );
-        } else {
-            segmentIndex = Math.min(
-                segmentCount - 1,
-                Math.floor((1 - clampedRatio) * segmentCount)
-            );
+        let currentLane = this.path[this.currentLaneIndex];
+        let next_position = this.getNextPosition();
+        if (!next_position)
+        {
+            this.finished = true;
+            currentLane.getSegments()[this.currentSegmentIndex]?.release();
+            return;
         }
 
+        let [newLaneIndex, newStartAtLaneRatio, newEndAtLaneRatio, newProgress, newSegmentIndex] = next_position;
 
-        if (segmentIndex !== this.segmentIndex) {
-            // Перешли в новый сегмент → обновляем занятость
-            const previousSegments = this.currentLane.direction === 1
-                ? road.forwardSegments
-                : road.backwardSegments;
-            previousSegments[this.segmentIndex]?.release();
 
-            const currentSegment = segments[segmentIndex];
-            if (currentSegment.isOccupied()) {
-                // Новый сегмент занят — не двигаемся дальше
-                this.progress -= this.speed;
-                previousSegments[this.segmentIndex]?.occupy(); // возвращаем занятость
+        if (newSegmentIndex !== this.currentSegmentIndex) 
+        {
+            const previousSegments = currentLane.getSegments();
+            const newSegments = this.path[newLaneIndex].getSegments();
+
+            if (newSegments[newSegmentIndex].isOccupied()) 
                 return;
-            }
 
-            currentSegment.occupy();
-            this.segmentIndex = segmentIndex;
+            newSegments[newSegmentIndex].occupy(this);
+            previousSegments[this.currentSegmentIndex]?.release();
         }
 
-        // Дошли до конца текущего сегмента
-        if (this.progress >= segmentLength) {
-            // Освобождаем текущий сегмент
-            segments[this.segmentIndex]?.release();
-
-            this.lanePathIndex = this.lanePath.indexOf(this.currentLane) + 1;
-            if (this.lanePathIndex >= this.lanePath.length) {
-                this.finished = true;
-                return;
-            }
-
-            const nextLane = this.lanePath[this.lanePathIndex];
-            const nextRoad = nextLane.road;
-            const nextSegments = nextLane.direction === 1
-                ? nextRoad.forwardSegments
-                : nextRoad.backwardSegments;
-
-            let nextSegmentIndex = Math.floor((nextLane.direction === 1 ? 0 : 1) * nextSegments.length);
-            nextSegmentIndex -= (nextLane.direction === 1 ? 0 : 1);
-
-            if (nextSegments[nextSegmentIndex].isOccupied()) {
-                // Ждём освобождения входа в следующую дорогу
-                this.progress = segmentLength;
-                segments[this.segmentIndex]?.occupy(); // держим текущий
-                return;
-            }
-
-            // Переход на новую полосу
-            nextSegments[nextSegmentIndex].occupy();
-            this.currentLane = nextLane;
-            this.segmentIndex = nextSegmentIndex;
-            this.startRatio = (nextLane.direction === 1) ? 0 : 1;
-            this.endRatio = (this.lanePathIndex === this.lanePath.length - 1)
-                ? this.to.ratio
-                : (nextLane.direction === 1 ? 1 : 0);
-            this.progress = 0;
-        }
+        this.currentLaneIndex = newLaneIndex;
+        this.startAtLaneRatio = newStartAtLaneRatio;
+        this.endAtLaneRatio = newEndAtLaneRatio;
+        this.progress = newProgress;
+        this.currentSegmentIndex = newSegmentIndex;
     }
 
 
