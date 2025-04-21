@@ -1,5 +1,5 @@
 import { Lane } from "./Lane.js"
-
+import { INTERSECTION_ENTRY_MARGIN } from "../utils/constants.js"
 
 class Segment {
     constructor() {
@@ -42,9 +42,15 @@ export class Road {
         return [new Lane(this, 1), new Lane(this, -1)];
     }
 
-    getPointAtRatio(ratio) {
-        const x = this.startIntersection.x + (this.endIntersection.x - this.startIntersection.x) * ratio;
-        const y = this.startIntersection.y + (this.endIntersection.y - this.startIntersection.y) * ratio;
+    getPointAtRatio(ratio, clampToEntry = false) {
+        let adjustedRatio = ratio;
+        if (clampToEntry) {
+            const margin = INTERSECTION_ENTRY_MARGIN;
+            adjustedRatio = Math.min(1 - margin, Math.max(margin, ratio));
+        }
+
+        const x = this.startIntersection.x + (this.endIntersection.x - this.startIntersection.x) * adjustedRatio;
+        const y = this.startIntersection.y + (this.endIntersection.y - this.startIntersection.y) * adjustedRatio;
         return { x, y };
     }
 

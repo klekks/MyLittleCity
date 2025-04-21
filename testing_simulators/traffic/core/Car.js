@@ -1,4 +1,5 @@
 import { find_path } from "../utils/Pathfinding.js"
+import { ROAD_END_RATIO, ROAD_BEGIN_RATIO } from "../utils/constants.js";
 
 export class Car {
     // TODO: random speed
@@ -61,7 +62,7 @@ export class Car {
         }
         else
         {
-            this.endAtLaneRatio = currentLane.getLaneRatioAtRoadRatio(currentLane.direction == 1 ? 1 : 0);
+            this.endAtLaneRatio = currentLane.getLaneRatioAtRoadRatio(currentLane.direction == 1 ? ROAD_END_RATIO : ROAD_BEGIN_RATIO);
         }
 
         let currentRatio = this.startAtLaneRatio;
@@ -100,11 +101,11 @@ export class Car {
             }
             newLaneIndex = this.currentLaneIndex + 1;
             newLane = this.path[newLaneIndex];
-            newStartAtLaneRatio = 0;
+            newStartAtLaneRatio = ROAD_BEGIN_RATIO;
             newEndAtLaneRatio = (newLaneIndex + 1 == this.path.length) 
                                 ? newLane.getLaneRatioAtRoadRatio(this.to.ratio) 
-                                : 1;
-            newProgress = 0;
+                                : ROAD_END_RATIO;
+            newProgress = newLane.getLength() * newStartAtLaneRatio;
             newSegmentIndex = 0; 
         }  
         else
@@ -140,7 +141,7 @@ export class Car {
         let [newLaneIndex, newStartAtLaneRatio, newEndAtLaneRatio, newProgress, newSegmentIndex] = next_position;
 
 
-        if (newSegmentIndex !== this.currentSegmentIndex) 
+        if (newSegmentIndex !== this.currentSegmentIndex || newLaneIndex !== this.currentLaneIndex) 
         {
             const previousSegments = currentLane.getSegments();
             const newSegments = this.path[newLaneIndex].getSegments();

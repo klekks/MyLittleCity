@@ -44,9 +44,9 @@ export class Lane {
     getPointAtRatio(ratio)
     {
         if (this.direction == 1)
-            return this.road.getPointAtRatio(ratio)
+            return this.road.getPointAtRatio(ratio, true)
         else 
-            return this.road.getPointAtRatio(1 - ratio);
+            return this.road.getPointAtRatio(1 - ratio, true);
     }
 
     getLaneRatioAtRoadRatio(ratio)
