@@ -1,5 +1,6 @@
 import { RoadView } from '../graphics/RoadView.js';
 import { IntersectionView } from '../graphics/IntersectionView.js';
+import { isIntersectingExistingRoads, split_road_at } from './road_utils.js';
 
 
 const SEGMENTS_PER_PIXEL = 1 / 10;
@@ -149,108 +150,34 @@ export class MapRenderer {
         this.extra_render_callbacks = {};
     }
 
-    push_extra_render_callback(key, callback)
-    {
-        this.extra_render_callbacks[key] = callback;
-    }
+    // findOrSplitRoadAt(x, y) {
+    //     for (const road of this.roads) {
+    //         const closest = road.findClosestPointOnRoad(x, y);
+    //         if (!closest) continue;
+    //         const dist = Math.hypot(closest.x - x, closest.y - y);
+    //         if (dist < INTERSECTION_SNAP_RADIUS) {
+    //             const newIntersection = new IntersectionView(closest.x, closest.y);
+    //             this.intersections.push(newIntersection);
 
-    pop_extra_render_callback(key)
-    {
-        delete this.extra_render_callbacks[key];
-    }
+    //             const segmentCount1 = Math.max(1, Math.round(road.segmentCount * closest.ratio));
+    //             const segmentCount2 = Math.max(1, road.segmentCount - segmentCount1);
 
-    findOrSplitRoadAt(x, y) {
-        for (const road of this.roads) {
-            const closest = road.findClosestPointOnRoad(x, y);
-            if (!closest) continue;
-            const dist = Math.hypot(closest.x - x, closest.y - y);
-            if (dist < INTERSECTION_SNAP_RADIUS) {
-                const newIntersection = new IntersectionView(closest.x, closest.y);
-                this.intersections.push(newIntersection);
+    //             road.startIntersection.disconnectRoad(road);
+    //             road.endIntersection.disconnectRoad(road);
 
-                const segmentCount1 = Math.max(1, Math.round(road.segmentCount * closest.ratio));
-                const segmentCount2 = Math.max(1, road.segmentCount - segmentCount1);
+    //             const road1 = new RoadView(road.startIntersection, newIntersection, segmentCount1);
+    //             const road2 = new RoadView(newIntersection, road.endIntersection, segmentCount2);
 
-                road.startIntersection.disconnectRoad(road);
-                road.endIntersection.disconnectRoad(road);
+    //             this.roads = this.roads.filter(r => r !== road);
+    //             this.roads.push(road1, road2);
+    //             return newIntersection;
+    //         }
+    //     }
+    //     return null;
+    // }
 
-                const road1 = new RoadView(road.startIntersection, newIntersection, segmentCount1);
-                const road2 = new RoadView(newIntersection, road.endIntersection, segmentCount2);
-
-                this.roads = this.roads.filter(r => r !== road);
-                this.roads.push(road1, road2);
-                return newIntersection;
-            }
-        }
-        return null;
-    }
 
     
-    doLinesIntersect(a1, a2, b1, b2) {
-        function ccw(p1, p2, p3) {
-            return (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
-        }
-        return (
-            ccw(a1, b1, b2) !== ccw(a2, b1, b2) &&
-            ccw(a1, a2, b1) !== ccw(a1, a2, b2)
-        );
-    }
-    isIntersectingExistingRoads(start, end) {
-        for (const road of this.roads) {
-            const a1 = road.startIntersection;
-            const a2 = road.endIntersection;
-            if ((a1 === start || a1 === end || a2 === start || a2 === end)) continue;
-            if (this.doLinesIntersect(start, end, a1, a2)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    addRoadByCoords(startX, startY, endX, endY) {
-        let dx = endX - startX;
-        let dy = endY - startY;
-
-        let start = IntersectionView.findIntersectionAtPoint(startX, startY);
-        if (!start) start = this.findOrSplitRoadAt(startX, startY) || findOrCreateIntersection(startX, startY);
-
-        ({ dx, dy } = snapToRelativeAngle(startX, startY, startX + dx, startY + dy, start.connectedRoads));
-        endX = startX + dx;
-        endY = startY + dy;
-
-
-        const length = Math.hypot(dx, dy);
-
-        if (length < MIN_ROAD_LENGTH) {
-            console.warn("Cannot add road: too short.");
-            return;
-        }
-
-        let end = IntersectionView.findIntersectionAtPoint(endX, endY);
-        if (!end) end = this.findOrSplitRoadAt(endX, endY) || findOrCreateIntersection(endX, endY);
-
-        if (!start.canConnectMore() || !end.canConnectMore()) {
-            console.warn("Cannot add road: one of the intersections has max connections.");
-            return;
-        }
-
-        if (!start.isAngleAllowed(start, end) || !end.isAngleAllowed(end, start)) {
-            console.warn("Cannot add road: angle too small.");
-            return;
-        }
-
-        if (this.isIntersectingExistingRoads(start, end)) {
-            console.warn("Cannot add road: intersects existing road.");
-            return;
-        }
-
-        const segmentCount = Math.max(1, Math.round(length * SEGMENTS_PER_PIXEL));
-
-        const road = new RoadView(start, end, segmentCount);
-        this.roads.push(road);
-
-        this.needRedrawStatic = true;
-    }
 
     drawStaticObjects() {
         this.staticCtx.clearRect(0, 0, this.staticCanvas.width, this.staticCanvas.height);
