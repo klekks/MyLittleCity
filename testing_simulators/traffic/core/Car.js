@@ -1,7 +1,12 @@
 import { find_path } from "../utils/Pathfinding.js"
 import { ROAD_END_RATIO, ROAD_BEGIN_RATIO } from "../utils/constants.js";
+import { Observer, ObserverSubject } from "../observers/Observer.js";
 
-export class Car {
+
+export const CAR_IS_CREATED = 0x01;
+export const CAR_IS_FINISHED = 0x02;
+
+export class Car extends ObserverSubject {
     // TODO: random speed
     // TODO: aceleration
     static taskQueue = [];
@@ -39,11 +44,8 @@ export class Car {
         const path = find_path(fromLane, fromBuilding.ratio, toLane, toBuilding.ratio);
 
         if (path.length === 0) {
-            console.warn("Маршрут не найден");
-            this.finished = true;
             return;
         }
-        // console.log(path.map((e) => { return e.road.id; }))
 
         return path;
     }
@@ -83,6 +85,8 @@ export class Car {
 
         const roadIds = this.path.map(lane => `${lane.direction === 1 ? "→" : "←"}R${lane.road.id}`);
         console.log(`Маршрут машины ${fromBuilding.id} → ${toBuilding.id}:`, roadIds.join(" "));
+
+        this.notify(this, CAR_IS_CREATED);
     }
 
     getNextPosition()
@@ -134,6 +138,7 @@ export class Car {
         if (!next_position)
         {
             this.finished = true;
+            this.notify(this, CAR_IS_FINISHED);
             currentLane.getSegments()[this.currentSegmentIndex]?.release();
             return;
         }

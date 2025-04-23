@@ -1,3 +1,4 @@
+import { ObserverSubject } from "../observers/Observer";
 // ax, ay, bx, by - vector, px, py - point
 function pointSideIsLeft(ax, ay, bx, by, px, py) {
     const cross = (bx - ax) * (py - ay) - (by - ay) * (px - ax);
@@ -5,7 +6,9 @@ function pointSideIsLeft(ax, ay, bx, by, px, py) {
     return 0;
 }
 
-export class Building {
+const BUILDING_IS_CREATED = 0x01;
+
+export class Building extends ObserverSubject {
     static random_size_seed = Math.random();
     static idCounter = 0;
     constructor(road, ratio, side = 1, offset = 20, width = null, height = null) {
@@ -23,6 +26,7 @@ export class Building {
         this.offset = offset;
         this.color = Building.randomColor();
         console.log(`Building ${this.id} is ${this.side}`);
+        this.notify(this, BUILDING_IS_CREATED);
     }
 
     static randomSize() {

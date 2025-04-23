@@ -1,5 +1,6 @@
 import { Lane } from "./Lane.js"
-import { INTERSECTION_ENTRY_MARGIN } from "../utils/constants.js"
+import { INTERSECTION_ENTRY_MARGIN, INTERSECTION_SNAP_RADIUS } from "../utils/constants.js"
+import { ObserverSubject } from "../observers/Observer.js";
 
 class Segment {
     constructor() {
@@ -21,9 +22,15 @@ class Segment {
     }
 }
 
+const ROAD_IS_CREATED = 0x01;
+const ROAD_IS_DELETED = 0x02;
+const ROAD_IS_ACCEPTED = 0x03;
 
-export class Road {
+const ROAD_SNAP_RADIUS = INTERSECTION_SNAP_RADIUS;
+
+export class Road extends ObserverSubject {
     static idCounter = 0;
+    static roads = new Set();
     constructor(startIntersection, endIntersection, segmentCount = 10) {
         this.id = Road.idCounter++;
 
@@ -34,12 +41,18 @@ export class Road {
         this.forwardSegments = Array.from({ length: segmentCount }, () => new Segment());
         this.backwardSegments = Array.from({ length: segmentCount }, () => new Segment());
 
+        this.lanes = [new Lane(this, 1), new Lane(this, -1)];
+
         this.startIntersection.connectRoad(this);
         this.endIntersection.connectRoad(this);
+
+        this.is_deleted = false;
+        Road.roads.add(this);
+        this.notify(this, ROAD_IS_CREATED);
     }
 
     getLanes() {
-        return [new Lane(this, 1), new Lane(this, -1)];
+        return this.lanes;
     }
 
     getPointAtRatio(ratio, clampToEntry = false) {
@@ -80,4 +93,45 @@ export class Road {
         const dy = this.endIntersection.y - this.startIntersection.y;
         return Math.hypot(dx, dy);
     }
+
+    accept()
+    {
+        // TODO: add acception actions, e. g. split road
+        this.notify(this, ROAD_IS_ACCEPTED);
+    }
+
+    delete()
+    {
+        if (!this.is_deleted)
+        {
+            this.is_deleted = true;
+            Road.roads.delete(this);
+
+            this.startIntersection.disconnectRoad(this);
+            this.endIntersection.disconnectRoad(this);
+
+            this.startIntersection = null;
+            this.endIntersection = null;
+
+            this.forwardSegments = null;
+            this.backwardSegments = null;
+
+            this.lanes = null;
+            this.notify(this, ROAD_IS_DELETED);
+        }
+    }
+
+    static getRoadAtPoint(x, y)
+    {
+        for (let road of Road.roads)
+        {
+            const closest = road.findClosestPointOnRoad(x, y);
+            if (!closest) continue;
+            const dist = Math.hypot(closest.x - x, closest.y - y);
+            if (dist < ROAD_SNAP_RADIUS)
+                return road;
+        }
+        return null;
+    }
 }
+

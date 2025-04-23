@@ -6,9 +6,14 @@ import {
 } from './graphics/CarView.js';
 import {
     MapRenderer,
+    Renderer,
     snapToRelativeAngle
 } from './utils/MapRenderer.js';
 
+import { RoadView } from './graphics/RoadView.js';
+import { IntersectionView } from './graphics/IntersectionView.js';
+
+import { findOrCreateIntersection } from './utils/road_utils.js';
 //window.addEventListener("contextmenu", e => e.preventDefault());
 
 
@@ -34,7 +39,9 @@ document.addEventListener('DOMContentLoaded', function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    renderer = new MapRenderer(canvas, ctx);
+    renderer = new Renderer(canvas, ctx);
+
+    //renderer = new MapRenderer(canvas, ctx);
 
     let isDrawing = false;
     let startPoint = null;
@@ -44,16 +51,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            const road = renderer.findRoadAt(x, y);
-            if (road) {
-                renderer.removeRoad(road);
-                // renderer.render();
-            }
+            const road = RoadView.findRoadAt(x, y);
+            if (road) road.delete();
             return;
         }
 
         if (e.shiftKey) {
-            const road = renderer.findRoadAt(e.offsetX, e.offsetY);
+            const road = RoadView.findRoadAt(e.offsetX, e.offsetY);
             if (road) {
                 const closest = road.findClosestPointOnRoad(e.offsetX, e.offsetY);
 
@@ -109,6 +113,8 @@ document.addEventListener('DOMContentLoaded', function () {
             x: e.offsetX,
             y: e.offsetY
         };
+
+        new RoadView()
         renderer.addRoadByCoords(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
         // renderer.render();
         renderer.pop_extra_render_callback("mousemove_road_creating_dash");
@@ -118,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     canvas.addEventListener("mousemove", (e) => {
         if (e.shiftKey) {
-            const road = renderer.findRoadAt(e.offsetX, e.offsetY);
+            const road = RoadView.findRoadAt(e.offsetX, e.offsetY);
             if (road) {
                 const closest = road.findClosestPointOnRoad(e.offsetX, e.offsetY);
                 const roadLength = Math.hypot(
@@ -171,9 +177,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     let dx = e.offsetX - startPoint.x;
                     let dy = e.offsetY - startPoint.y;
-
-                    let start = renderer.findNearbyIntersection(startPoint.x, startPoint.y);
-                    if (!start) start = renderer.findOrSplitRoadAt(startPoint.x, startPoint.y) || renderer.findOrCreateIntersection(startPoint.x, startPoint.y);
+                    
+                    let start = IntersectionView.findIntersectionAtPoint(startPoint.x, startPoint.y);
+                    if (!start) start = renderer.findOrSplitRoadAt(startPoint.x, startPoint.y) || findOrCreateIntersection(startPoint.x, startPoint.y);
 
                     ({
                         dx,

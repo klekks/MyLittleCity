@@ -2,8 +2,6 @@ import { RoadView } from '../graphics/RoadView.js';
 import { IntersectionView } from '../graphics/IntersectionView.js';
 
 
-const INTERSECTION_SNAP_RADIUS = 10;
-const MIN_ANGLE_DEGREES = 20;
 const SEGMENTS_PER_PIXEL = 1 / 10;
 const MIN_ROAD_LENGTH = 30;
 const ANGLE_SNAP_TOLERANCE = 15;
@@ -44,6 +42,90 @@ export function snapToRelativeAngle(x0, y0, x1, y1, neighbors) {
 }
 
 
+export class Renderer
+{
+    constructor(canvas, ctx)
+    {
+        this.canvas = canvas;
+        this.ctx = ctx;
+
+        this.static_objects = new Set();
+        this.dynamic_objects = new Set();
+
+        this.preview_objects = new Set();
+
+        this.staticCanvas = document.createElement('canvas');
+        this.staticCanvas.width = canvas.width;
+        this.staticCanvas.height = canvas.height;
+        this.staticCtx = this.staticCanvas.getContext('2d');
+
+        this.needRedrawStatic = true;
+    }
+
+    add_static(object)
+    {
+        this.static_objects.add(object);
+        this.needRedrawStatic = true;
+    }
+
+    add_dynamic(object)
+    {
+        this.dynamic_objects.add(object);
+    }
+
+    add_preview(object)
+    {
+        this.preview_objects.add(object);
+    }
+
+    remove_static(object)
+    {
+        this.static_objects.delete(object);
+    }
+
+    remove_dynamic(object)
+    {
+        this.dynamic_objects.delete(object);
+    }
+
+    remove_preview(object)
+    {
+        this.preview_objects.delete(object);
+    }
+
+
+    static draw_objects(ctx, canvas, objects)
+    {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        objects.forEach(object => object.draw(ctx));
+    }
+
+    draw_static()
+    {
+        Renderer.draw_objects(this.staticCtx, this.staticCanvas, this.static_objects);
+        this.needRedrawStatic = false;
+    }
+
+    draw_dynamic()
+    {
+        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.ctx.drawImage(this.staticCanvas, 0, 0);
+        Renderer.draw_objects(this.ctx, this.canvas, this.dynamic_objects);
+    }
+
+    draw_preview()
+    {
+        Renderer.draw_objects(this.ctx, this.canvas, this.preview_objects);
+    }
+
+    draw()
+    {
+        if (this.needRedrawStatic)
+            this.draw_static();
+        this.draw_dynamic();
+        this.draw_preview();
+    }
+}
 
 
 export class MapRenderer {
@@ -67,14 +149,6 @@ export class MapRenderer {
         this.extra_render_callbacks = {};
     }
 
-    findNearbyIntersection(x, y) {
-        return this.intersections.find(i => {
-            const dx = i.x - x;
-            const dy = i.y - y;
-            return Math.hypot(dx, dy) <= INTERSECTION_SNAP_RADIUS;
-        });
-    }
-
     push_extra_render_callback(key, callback)
     {
         this.extra_render_callbacks[key] = callback;
@@ -83,23 +157,6 @@ export class MapRenderer {
     pop_extra_render_callback(key)
     {
         delete this.extra_render_callbacks[key];
-    }
-
-    findRoadAt(x, y) {
-        return this.roads.find(road => {
-            const closest = road.findClosestPointOnRoad(x, y);
-            if (!closest) return false;
-            const dist = Math.hypot(closest.x - x, closest.y - y);
-            return dist < INTERSECTION_SNAP_RADIUS;
-        });
-    }
-
-    findOrCreateIntersection(x, y) {
-        const nearby = this.findNearbyIntersection(x, y);
-        if (nearby) return nearby;
-        const newIntersection = new IntersectionView(x, y);
-        this.intersections.push(newIntersection);
-        return newIntersection;
     }
 
     findOrSplitRoadAt(x, y) {
@@ -128,21 +185,7 @@ export class MapRenderer {
         return null;
     }
 
-    isAngleAllowed(newStart, newEnd, intersection) {
-        const newVector = [newEnd.x - newStart.x, newEnd.y - newStart.y];
-        for (const road of intersection.connectedRoads) {
-            const other = road.startIntersection === intersection ? road.endIntersection : road.startIntersection;
-            const existingVector = [other.x - intersection.x, other.y - intersection.y];
-            const dot = newVector[0] * existingVector[0] + newVector[1] * existingVector[1];
-            const len1 = Math.hypot(...newVector);
-            const len2 = Math.hypot(...existingVector);
-            const angle = Math.acos(dot / (len1 * len2)) * 180 / Math.PI;
-            if (angle < MIN_ANGLE_DEGREES) {
-                return false;
-            }
-        }
-        return true;
-    }
+    
     doLinesIntersect(a1, a2, b1, b2) {
         function ccw(p1, p2, p3) {
             return (p3.y - p1.y) * (p2.x - p1.x) > (p2.y - p1.y) * (p3.x - p1.x);
@@ -168,8 +211,8 @@ export class MapRenderer {
         let dx = endX - startX;
         let dy = endY - startY;
 
-        let start = this.findNearbyIntersection(startX, startY);
-        if (!start) start = this.findOrSplitRoadAt(startX, startY) || this.findOrCreateIntersection(startX, startY);
+        let start = IntersectionView.findIntersectionAtPoint(startX, startY);
+        if (!start) start = this.findOrSplitRoadAt(startX, startY) || findOrCreateIntersection(startX, startY);
 
         ({ dx, dy } = snapToRelativeAngle(startX, startY, startX + dx, startY + dy, start.connectedRoads));
         endX = startX + dx;
@@ -183,15 +226,15 @@ export class MapRenderer {
             return;
         }
 
-        let end = this.findNearbyIntersection(endX, endY);
-        if (!end) end = this.findOrSplitRoadAt(endX, endY) || this.findOrCreateIntersection(endX, endY);
+        let end = IntersectionView.findIntersectionAtPoint(endX, endY);
+        if (!end) end = this.findOrSplitRoadAt(endX, endY) || findOrCreateIntersection(endX, endY);
 
         if (!start.canConnectMore() || !end.canConnectMore()) {
             console.warn("Cannot add road: one of the intersections has max connections.");
             return;
         }
 
-        if (!this.isAngleAllowed(start, end, start) || !this.isAngleAllowed(end, start, end)) {
+        if (!start.isAngleAllowed(start, end) || !end.isAngleAllowed(end, start)) {
             console.warn("Cannot add road: angle too small.");
             return;
         }
