@@ -13,7 +13,7 @@ import {
 import { RoadView } from './graphics/RoadView.js';
 import { IntersectionView } from './graphics/IntersectionView.js';
 
-import { findOrCreateIntersection } from './utils/road_utils.js';
+import { addRoadByCoords, findOrCreateIntersection, split_road_at } from './utils/road_utils.js';
 //window.addEventListener("contextmenu", e => e.preventDefault());
 
 
@@ -115,9 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         new RoadView()
-        renderer.addRoadByCoords(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
-        // renderer.render();
-        renderer.pop_extra_render_callback("mousemove_road_creating_dash");
+        addRoadByCoords(startPoint.x, startPoint.y, endPoint.x, endPoint.y);
         isDrawing = false;
         startPoint = null;
     });
@@ -163,41 +161,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         renderer.previewBuilding = null;
-
-        if (!isDrawing)
-        {
-            renderer.pop_extra_render_callback("mousemove_road_creating_dash");
-            return;
-        }
-        else
-        {
-            renderer.push_extra_render_callback("mousemove_road_creating_dash",
-                (_save_ctx) => {
-                    if (!startPoint) return;
-
-                    let dx = e.offsetX - startPoint.x;
-                    let dy = e.offsetY - startPoint.y;
-                    
-                    let start = IntersectionView.findIntersectionAtPoint(startPoint.x, startPoint.y);
-                    if (!start) start = renderer.findOrSplitRoadAt(startPoint.x, startPoint.y) || findOrCreateIntersection(startPoint.x, startPoint.y);
-
-                    ({
-                        dx,
-                        dy
-                    } = snapToRelativeAngle(startPoint.x, startPoint.y, startPoint.x + dx, startPoint.y + dy, start.connectedRoads));
-
-                    _save_ctx.strokeStyle = "#00aa00";
-                    _save_ctx.lineWidth = 2;
-                    _save_ctx.setLineDash([5, 5]);
-                    _save_ctx.beginPath();
-                    _save_ctx.moveTo(startPoint.x, startPoint.y);
-                    _save_ctx.lineTo(startPoint.x + dx, startPoint.y + dy);
-                    _save_ctx.stroke();
-                    _save_ctx.setLineDash([]);
-                }
-            );
-        }
-
         
     });
 
