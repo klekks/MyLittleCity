@@ -1,0 +1,11 @@
+[settings]
+os=Windows
+arch=x86_64
+compiler=gcc
+compiler.libcxx=libstdc++
+compiler.version=12.3
+
+[buildenv]
+CC=C:/mingw64/bin/gcc.exe
+CMAKE_C_COMPILER=gcc
+CMAKE_CXX_COMPILER=g++
