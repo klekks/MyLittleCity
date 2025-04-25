@@ -1,7 +1,6 @@
 
 mkdir .\builds\distr
 
-
 @echo off
 
 set CONFIG=Release

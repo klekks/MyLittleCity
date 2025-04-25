@@ -2,7 +2,6 @@
 
 #include "Intersection.hpp"
 
-
 class Road
 {
 private:

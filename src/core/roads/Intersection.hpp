@@ -1,11 +1,12 @@
 #include "Point.hpp"
-#include "Road.hpp"
 
 #include <cinttypes>
 #include <array>
 #include <memory>
 
 constexpr size_t MAX_ROADS_PER_INTERSECTION = 8;
+
+class Road;
 
 class Intersection
 {
