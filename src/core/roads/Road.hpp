@@ -1,16 +1,15 @@
 #pragma once
 
 #include "Intersection.hpp"
+#include "../GameObject.hpp"
 
-class Road
+class Road : public GameObject
 {
-private:
-    Intersection &begin_intersection, end_intersection;
+protected:
+    std::weak_ptr<Intersection> begin_intersection, end_intersection;
 
 public:
-    Road(Intersection& begin, Intersection& end);
+    Road(std::shared_ptr<Intersection> begin, std::shared_ptr<Intersection> end);
 
     float length() const;
-
-
 };

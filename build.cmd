@@ -1,5 +1,5 @@
 
-mkdir .\builds\distr
+mkdir .\build\distr
 
 @echo off
 
@@ -12,15 +12,15 @@ IF "%~3" EQU "SkipAllConan" goto SkipAllConan
 IF "%~3" EQU "NoClean" goto NoClean
 IF "%~3" EQU "SkipConanButConfig" goto SkipConanButConfig
 
-echo Removing builds
-rd /s /q builds
+echo Removing build
+rd /s /q build
 
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR Remove build Failed with exit-code: %errorlevel%
     exit /b %errorlevel%
 )
 
-echo builds folders removed
+echo build folders removed
 
 echo Removing old conan packages
 
@@ -30,38 +30,21 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b %errorlevel%
 )
 
-echo Conan folder removed
-mkdir %userprofile%\.conan2\profiles
-copy conan_profile %userprofile%\.conan2\profiles\default
+conan profile detect --force
+copy conan\win_conan_profile %userprofile%\.conan2\profiles\default
 
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR install conan profile Failed with exit-code: %errorlevel%
     exit /b %errorlevel%
 )
 
-echo Conan profile installed
-
 :NoClean
 
-echo Starting to build dependencies
+echo Conan profile installed
 
-conan install . --output-folder=builds/builds_conan/%ARCH%/%CONFIG% -s build_type=%CONFIG% -s arch=%ARCH% --build=missing
-
-if %ERRORLEVEL% NEQ 0 (
-    echo ERROR Cannot compile base lib Failed with exit-code: %errorlevel%
-    exit /b %errorlevel%
-)
-
-echo Base libs compiled
+conan install . --build=missing -s build_type=%CONFIG% -s arch=%ARCH%
 
 :SkipConanButConfig
-
-conan install . --output-folder=builds/builds_conan/%ARCH%/%CONFIG% -s build_type=%CONFIG% -s arch=%ARCH%
-if %ERRORLEVEL% NEQ 0 (
-    echo ERROR Cannot compile base lib Failed with exit-code: %errorlevel%
-    exit /b %errorlevel%
-)
-
 
 :SkipAllConan
 
@@ -69,15 +52,16 @@ echo Conan build steps skipped
 
 echo Generate make files
 
-cmake -B builds/%ARCH%/%CONFIG% -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE=builds/builds_conan/%ARCH%/%CONFIG%/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=%CONFIG%
+cd build
+
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_TOOLCHAIN_FILE="%CONFIG%/generators/conan_toolchain.cmake"
 
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR Cannot generate make files with exit-code: %errorlevel%
     exit /b %errorlevel%
 )
 
-
-cmake --build builds/%ARCH%/%CONFIG% --config %CONFIG% -j 8
+cmake --build . --config %CONFIG% -j 8
 
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR Cannot build with exit-code: %errorlevel%

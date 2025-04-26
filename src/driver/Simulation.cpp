@@ -2,34 +2,53 @@
 
 #include <iostream>
 
-#include "../controller/DelegateController.hpp"
+#include "../driver/World.hpp"
+#include "../graphics/Renderer.hpp"
+#include "../controller/InputBinding.hpp"    
+#include "../controller/InputHandler.hpp"    
+#include "../controller/EditorController.hpp"    
+#include "../controller/commands/MouseCommands.hpp"    
 
 Simulation::Simulation()
 {
-    window = std::make_shared<sf::RenderWindow>(sf::VideoMode(200, 200), "MyLittleCity");
+    window = std::make_shared<sf::RenderWindow>(sf::VideoMode(800, 800), "MyLittleCity");
 }
 
 void Simulation::render_loop()
 {
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
+    std::shared_ptr<World> world = std::make_shared<World>();
+    Renderer renderer(world);
+    EditorController controller(world);
+    InputContext inputContext;
+    InputHandler inputHandler;
 
-    auto controller = make_delegate_controller();
+    inputHandler.bind({InputActionType::MouseDown, sf::Mouse::Left}, std::make_shared<MouseDownCommand>(&controller, &inputContext));
+    inputHandler.bind({InputActionType::Hold, sf::Mouse::Left}, std::make_shared<HoldCommand>(&controller, &inputContext));
+    inputHandler.bind({InputActionType::MouseUp, sf::Mouse::Left}, std::make_shared<MouseUpCommand>(&controller, &inputContext));
 
-    while (window->isOpen())
-    {
+    while (window->isOpen()) {
         sf::Event event;
-        while (window->pollEvent(event))
-        {
-            auto command = controller->handle_input(*window, event);
-            if (command)
-                command->execute(event);
-            else
-                std::cout << "Unknown command" << std::endl;
+        while (window->pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window->close();
+
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Num1)
+                    inputContext.setMode(EditorMode::DrawRoad);
+                else if (event.key.code == sf::Keyboard::Num2)
+                    inputContext.setMode(EditorMode::PlaceBuilding);
+                else if (event.key.code == sf::Keyboard::Num3)
+                    inputContext.setMode(EditorMode::RemoveRoad);
+            }
+
+            inputHandler.handleInput(event);
         }
 
-        window->clear();
-        window->draw(shape);
+        inputHandler.handleHold(*window);
+
+        window->clear(sf::Color::Green);
+        renderer.render(*window, controller.isDrawing(), controller.getStart(), controller.getCurrent());
         window->display();
     }
+    
 }

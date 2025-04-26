@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION "3.22")
 
-project(MyLittileCity)
+project(MyLittleCity)
 
 set(
     roads_source_files
@@ -10,6 +10,6 @@ set(
     Road.cpp 
 )
 
-add_library(core_roads_logic STATIC ${roads_source_files})
+add_library(core_roads_logic OBJECT ${roads_source_files})
 
 

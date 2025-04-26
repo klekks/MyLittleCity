@@ -32,4 +32,5 @@
 *.app
 
 # build folder
-builds
+build
+CMakeUserPresets.json
