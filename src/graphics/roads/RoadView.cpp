@@ -7,13 +7,12 @@
 
 RoadView::RoadView(std::shared_ptr<Intersection> a, std::shared_ptr<Intersection> b)
     : Road(a, b)
-{}
-
+{
+}
 
 void RoadView::draw(sf::RenderWindow &window) const
 {
-    const float width = 20.0f;
-    const float halfWidth = width / 2.0f;
+    const float halfWidth = width_ / 2.0f;
 
     auto begin_intersection = this->begin_intersection.lock();
     auto end_intersection = this->end_intersection.lock();
@@ -21,27 +20,25 @@ void RoadView::draw(sf::RenderWindow &window) const
     if (!begin_intersection || !end_intersection)
         return;
 
+    float dx = begin_intersection->getX() - end_intersection->getX();
+    float dy = begin_intersection->getY() - end_intersection->getY();
 
-    float dx = begin_intersection->distanceX(*end_intersection);
-    float dy = begin_intersection->distanceY(*end_intersection);
+    float alpha = atan2f(dy, dx);
+
+    float ax = halfWidth * sinf(alpha), ay = halfWidth * cosf(alpha);
+
     float length = this->length();
 
     float nx = dx / length;
     float ny = dy / length;
-    float px = -ny;
-    float py = nx;
 
-    // точки по краям дороги
     sf::VertexArray roadShape(sf::Quads, 4);
-    roadShape[0].position = (begin_intersection->coordinates() + Point{px * halfWidth, py * halfWidth}).to_sfml_vector2f();
-    roadShape[1].position = (end_intersection->coordinates()  + Point{px * halfWidth, py * halfWidth}).to_sfml_vector2f(); 
-    
-    roadShape[2].position = (end_intersection->coordinates()  + Point{-px * halfWidth, -py * halfWidth}).to_sfml_vector2f(); 
-    roadShape[3].position = (begin_intersection->coordinates()  + Point{-px * halfWidth, -py * halfWidth}).to_sfml_vector2f(); 
 
+    auto bb = getBoundingBox().getCorners();
     for (int i = 0; i < 4; ++i)
     {
-        roadShape[i].color = sf::Color(68, 68, 68); // #444
+        roadShape[i].position = bb[i].to_sfml_vector2f();
+        roadShape[i].color = color_; // #444
     }
 
     window.draw(roadShape);
@@ -112,4 +109,9 @@ void RoadView::draw(sf::RenderWindow &window) const
     text.setOrigin(text.getLocalBounds().width / 2, text.getLocalBounds().height / 2);
 
     window.draw(text);
+}
+
+void RoadView::setColor(const sf::Color &color)
+{
+    color_ = color;
 }

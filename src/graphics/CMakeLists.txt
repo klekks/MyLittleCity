@@ -5,6 +5,7 @@ project(MyLittleCity)
 set( 
     drawable_object_sources
     roads/RoadView.cpp 
+    roads/IntersectionView.cpp
     Renderer.cpp
 )
 

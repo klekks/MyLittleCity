@@ -2,6 +2,8 @@
 
 #include <SFML/Window.hpp>
 #include "../driver/World.hpp"
+#include "../graphics/roads/IntersectionView.hpp"
+
 #include <memory>
 
 class EditorController
@@ -16,12 +18,10 @@ public:
     void placeBuilding(const sf::Vector2i &pos) ;
     void removeRoad() ;
 
-    bool isDrawing() const ;
-    sf::Vector2i getStart() const ;
-    sf::Vector2i getCurrent() const ;
-
+    std::vector<std::shared_ptr<Drawable>> getPreviews() const;
 private:
     std::shared_ptr<World> world;
-    bool drawing = false;
-    sf::Vector2i start, current;
+    
+    std::shared_ptr<RoadView> roadPreview;
+    std::shared_ptr<IntersectionView> startIntersectionPreview, endIntersectionPreview;
 };

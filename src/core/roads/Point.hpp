@@ -24,5 +24,6 @@ public:
     float getX() const;
     float getY() const;
 
+    float dot(const Point &other) const;
     sf::Vector2f to_sfml_vector2f() const;
 };

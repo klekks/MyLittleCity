@@ -11,7 +11,7 @@ class InputHandler
 {
 public:
     void bind(const InputBinding &binding, std::shared_ptr<Command> command);
-    void handleInput(const sf::Event &event);
+    void handleInput(const sf::Event &event, sf::RenderWindow &window);
     void handleHold(sf::RenderWindow &window);
 private:
     std::unordered_map<InputBinding, std::shared_ptr<Command>> bindings;

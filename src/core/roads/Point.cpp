@@ -68,3 +68,8 @@ float Point::getY() const
 {
     return y;
 }
+
+float Point::dot(const Point &other) const
+{
+    return x * other.x + y * other.y;
+}

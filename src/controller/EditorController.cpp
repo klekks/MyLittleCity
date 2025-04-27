@@ -1,6 +1,5 @@
 #include "EditorController.hpp"
 
-
 EditorController::EditorController(std::shared_ptr<World> w) : world(w)
 {
 }
@@ -8,26 +7,36 @@ EditorController::EditorController(std::shared_ptr<World> w) : world(w)
 
 void EditorController::startRoad(const sf::Vector2i &pos)
 {
-    drawing = true;
-    start = current = pos;
+    startIntersectionPreview = std::make_shared<IntersectionView>(Point{(float)pos.x, (float)pos.y});
+    endIntersectionPreview = std::make_shared<IntersectionView>(Point{(float)pos.x, (float)pos.y});
+    roadPreview = std::make_shared<RoadView>(startIntersectionPreview, endIntersectionPreview);
 }
 
 
 void EditorController::previewRoad(const sf::Vector2i &pos)
 {
-    if (drawing)
-        current = pos;
+    endIntersectionPreview = std::make_shared<IntersectionView>(Point{(float)pos.x, (float)pos.y});
+    roadPreview = std::make_shared<RoadView>(startIntersectionPreview, endIntersectionPreview);
+
+    if (world->intersects(*roadPreview))
+    {
+        roadPreview->setColor(sf::Color(255, 0, 0)); // Red color for intersection
+    }
 }
 
 
 void EditorController::finishRoad(const sf::Vector2i &pos)
 {
-    if (drawing)
+    if (roadPreview && startIntersectionPreview && endIntersectionPreview)
     {
-        world->addRoad(start, pos);
-        drawing = false;
+        world->addRoad(roadPreview);
+        world->addIntersection(startIntersectionPreview);
+        world->addIntersection(endIntersectionPreview);
+        roadPreview = nullptr;
+        startIntersectionPreview = nullptr;
+        endIntersectionPreview = nullptr;
     }
-}
+}       
 
 
 void EditorController::placeBuilding(const sf::Vector2i &pos)
@@ -42,19 +51,9 @@ void EditorController::removeRoad()
 }
 
 
-bool EditorController::isDrawing() const
+std::vector<std::shared_ptr<Drawable>> EditorController::getPreviews() const
 {
-    return drawing;
-}
-
-
-sf::Vector2i EditorController::getStart() const
-{
-    return start;
-}
-
-
-sf::Vector2i EditorController::getCurrent() const
-{
-    return current;
+    if (!roadPreview || !startIntersectionPreview || !endIntersectionPreview)
+        return {};
+    return {roadPreview, startIntersectionPreview, endIntersectionPreview};
 }

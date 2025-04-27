@@ -1,9 +1,14 @@
 #include "Renderer.hpp"
+#include <memory>
 
-Renderer::Renderer(std::shared_ptr<World> world) : world(world) {}
+Renderer::Renderer(std::shared_ptr<World> world, std::shared_ptr<Camera> camera) : world(world), camera(camera) {}
 
-void Renderer::render(sf::RenderWindow &window, bool preview, sf::Vector2i start, sf::Vector2i current)
+void Renderer::render(sf::RenderWindow &window, const std::vector<std::shared_ptr<Drawable>> &previews)
 {
+    sf::View view = window.getDefaultView();
+    view.zoom(1.0f / camera->getZoom());
+    window.setView(view);
+
     for (auto &road : world->getRoads())
     {
         road->draw(window);
@@ -17,9 +22,11 @@ void Renderer::render(sf::RenderWindow &window, bool preview, sf::Vector2i start
         window.draw(building);
     }
 
-    if (preview)
+    if (!previews.empty())
     {
-        sf::Vertex line[] = {sf::Vertex(sf::Vector2f(start)), sf::Vertex(sf::Vector2f(current))};
-        window.draw(line, 2, sf::Lines);
+        for (const auto &preview : previews)
+        {
+            preview->draw(window);
+        }
     }
 }

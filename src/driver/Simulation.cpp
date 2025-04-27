@@ -8,6 +8,7 @@
 #include "../controller/InputHandler.hpp"    
 #include "../controller/EditorController.hpp"    
 #include "../controller/commands/MouseCommands.hpp"    
+#include "Camera.hpp"
 
 Simulation::Simulation()
 {
@@ -17,7 +18,8 @@ Simulation::Simulation()
 void Simulation::render_loop()
 {
     std::shared_ptr<World> world = std::make_shared<World>();
-    Renderer renderer(world);
+    auto camera = std::make_shared<Camera>();
+    Renderer renderer(world, camera);
     EditorController controller(world);
     InputContext inputContext;
     InputHandler inputHandler;
@@ -40,14 +42,21 @@ void Simulation::render_loop()
                 else if (event.key.code == sf::Keyboard::Num3)
                     inputContext.setMode(EditorMode::RemoveRoad);
             }
+            else if (event.type == sf::Event::MouseWheelScrolled) {
+                if (event.mouseWheelScroll.delta > 0)
+                    camera->zoomIn();
+                else
+                    camera->zoomOut();
+            }
+            
 
-            inputHandler.handleInput(event);
+            inputHandler.handleInput(event, *window);
         }
 
         inputHandler.handleHold(*window);
 
         window->clear(sf::Color::Green);
-        renderer.render(*window, controller.isDrawing(), controller.getStart(), controller.getCurrent());
+        renderer.render(*window, controller.getPreviews());
         window->display();
     }
     

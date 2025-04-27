@@ -6,6 +6,7 @@ set(
     simulation_sources
     Simulation.cpp
     World.cpp
+    Camera.cpp
 )
 
 add_library(simulation STATIC ${simulation_sources} )
