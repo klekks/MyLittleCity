@@ -62,3 +62,13 @@ bool obbIntersect(const OBB &a, const OBB &b)
     }
     return true; 
 }
+
+const OBB& ObjectColider::getBoundingBox() const
+{
+    return bounding_box_;
+}
+
+void ObjectColider::setBoundingBox(const OBB& obb)
+{
+    bounding_box_ = obb;
+}
