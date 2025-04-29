@@ -6,7 +6,9 @@ void World::addRoad(const sf::Vector2i &a, const sf::Vector2i &b)
     auto i2 = std::make_shared<IntersectionView>(Point({(float)b.x, (float)b.y}));
     intersections.push_back(i1);
     intersections.push_back(i2);
-    roads.emplace_back(std::make_shared<RoadView>(i1, i2));
+    auto road = std::make_shared<RoadView>(i1, i2);
+    road->getCollider()->setOwner(road);
+    roads.push_back(road);
 }
 
 void World::addBuilding(const sf::Vector2i &pos)
@@ -43,10 +45,10 @@ const std::vector<sf::Vector2i> &World::getBuildings() const
 
 bool World::intersects(const RoadView &road) const
 {
-    auto bb = road.getBoundingBox();
+    auto collider = road.getCollider();
     for (const auto &r : roads)
     {
-        if (r->getBoundingBox().intersects(bb))
+        if (r->getCollider()->intersects(*collider))
             return true;
     }
     return false;

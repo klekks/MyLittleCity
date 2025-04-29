@@ -2,9 +2,8 @@
 
 #include "Intersection.hpp"
 #include "../GameObject.hpp"
-#include "../OrientedBoundingBox.hpp"
 
-class Road : public GameObject, public ObjectColider
+class Road : public GameObject
 {
 protected:
     std::weak_ptr<Intersection> begin_intersection, end_intersection;

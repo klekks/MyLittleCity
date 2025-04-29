@@ -2,10 +2,10 @@
 
 #include <cmath>
 
-OBB::OBB(const Point& center, const Point& halfSize, float rotation)
+OrientedBoundingBox::OrientedBoundingBox(const Point& center, const Point& halfSize, float rotation)
         : center(center), halfSize(halfSize), rotation(rotation) {}
 
-std::array<Point, 4> OBB::getCorners() const
+std::array<Point, 4> OrientedBoundingBox::getCorners() const
 {
     float cosA = cosf(rotation);
     float sinA = sinf(rotation);
@@ -19,7 +19,7 @@ std::array<Point, 4> OBB::getCorners() const
         center + Point{-right.getX() * halfSize.getX() + up.getX() * halfSize.getY(), -right.getY() * halfSize.getX() + up.getY() * halfSize.getY()}};
 }
 
-bool OBB::intersects(const OBB &other) const
+bool OrientedBoundingBox::intersects(const OrientedBoundingBox &other) const
 {
     return obbIntersect(*this, other);
 }
@@ -35,7 +35,7 @@ void projectOntoAxis(const std::array<Point, 4> &corners, const Point &axis, flo
     }
 }
 
-bool obbIntersect(const OBB &a, const OBB &b)
+bool obbIntersect(const OrientedBoundingBox &a, const OrientedBoundingBox &b)
 {
     auto cornersA = a.getCorners();
     auto cornersB = b.getCorners();
@@ -61,14 +61,4 @@ bool obbIntersect(const OBB &a, const OBB &b)
         }
     }
     return true; 
-}
-
-const OBB& ObjectColider::getBoundingBox() const
-{
-    return bounding_box_;
-}
-
-void ObjectColider::setBoundingBox(const OBB& obb)
-{
-    bounding_box_ = obb;
 }

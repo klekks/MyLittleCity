@@ -10,6 +10,7 @@ void EditorController::startRoad(const sf::Vector2i &pos)
     startIntersectionPreview = std::make_shared<IntersectionView>(Point{(float)pos.x, (float)pos.y});
     endIntersectionPreview = std::make_shared<IntersectionView>(Point{(float)pos.x, (float)pos.y});
     roadPreview = std::make_shared<RoadView>(startIntersectionPreview, endIntersectionPreview);
+    roadPreview->getCollider()->setOwner(roadPreview);
 }
 
 
@@ -17,6 +18,7 @@ void EditorController::previewRoad(const sf::Vector2i &pos)
 {
     endIntersectionPreview = std::make_shared<IntersectionView>(Point{(float)pos.x, (float)pos.y});
     roadPreview = std::make_shared<RoadView>(startIntersectionPreview, endIntersectionPreview);
+    roadPreview->getCollider()->setOwner(roadPreview);
 
     if (world->intersects(*roadPreview))
     {
