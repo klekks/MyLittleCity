@@ -12,7 +12,7 @@ private:
 public: 
     virtual ~Collider() = default;
     virtual bool intersects(const Collider& other) const = 0;
-
+    
     std::shared_ptr<GameObject> getOwner() const;
     void setOwner(std::shared_ptr<GameObject> owner);
 };

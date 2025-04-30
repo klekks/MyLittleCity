@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-OrientedBoundingBox::OrientedBoundingBox(const Point& center, const Point& halfSize, float rotation)
-        : center(center), halfSize(halfSize), rotation(rotation) {}
+OrientedBoundingBox::OrientedBoundingBox(const Point &center, const Point &halfSize, float rotation)
+    : center(center), halfSize(halfSize), rotation(rotation) {}
 
 std::array<Point, 4> OrientedBoundingBox::getCorners() const
 {
@@ -60,5 +60,20 @@ bool obbIntersect(const OrientedBoundingBox &a, const OrientedBoundingBox &b)
             return false;
         }
     }
-    return true; 
+    return true;
+}
+
+Point OrientedBoundingBox::getCenter() const
+{
+    return center;
+}
+
+Point OrientedBoundingBox::getHalfSize() const
+{
+    return halfSize;
+}
+
+float OrientedBoundingBox::getRotation() const
+{
+    return rotation;
 }

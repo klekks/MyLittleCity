@@ -13,6 +13,11 @@ public:
     OrientedBoundingBox() = default;
     std::array<Point, 4> getCorners() const;
     bool intersects(const OrientedBoundingBox& other) const;
+
+    Point getCenter() const;
+    Point getHalfSize() const;
+    float getRotation() const;
+friend class QuadTreeNode;
 };
 
 bool obbIntersect(const OrientedBoundingBox& a, const OrientedBoundingBox& b);
