@@ -7,6 +7,7 @@ class MyCommand : public InputCommand
 public:
     void execute(const InputEvent &event, const InputContext &context) override
     {
+        
     }
 };
 
