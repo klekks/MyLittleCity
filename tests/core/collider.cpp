@@ -120,7 +120,7 @@ TEST(PointCollider, SamePoint)
 
 TEST(PointCollider, AlmostSamePointLessThanSnapRadius)
 {
-    PointCollider collider1({17.f + 0.99f * DOT_SNAP_RADIUS, 42.f});
+    PointCollider collider1({17.f + 0.99f * DOT_DEFAULT_SNAP_RADIUS, 42.f});
     PointCollider collider2({17.f, 42.f});
     ASSERT_TRUE(collider1.intersects(collider2));
     ASSERT_TRUE(collider2.intersects(collider1));
@@ -128,7 +128,7 @@ TEST(PointCollider, AlmostSamePointLessThanSnapRadius)
 
 TEST(PointCollider, AlmostSamePointMoreThanSnapRadius)
 {
-    PointCollider collider1({17.f + 1.01f * DOT_SNAP_RADIUS, 42.f});
+    PointCollider collider1({17.f + 1.01f * DOT_DEFAULT_SNAP_RADIUS, 42.f});
     PointCollider collider2({17.f, 42.f});
     ASSERT_FALSE(collider1.intersects(collider2));
     ASSERT_FALSE(collider2.intersects(collider1));

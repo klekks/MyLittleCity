@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-constexpr float DOT_SNAP_RADIUS = 0.01f;
+constexpr float DOT_DEFAULT_SNAP_RADIUS = 0.01f;
 
 template <typename Type>
 struct Point2D
@@ -86,13 +86,16 @@ private:
 class PointCollider : public Collider 
 {
 public:
-    PointCollider(const Point2Df&);
+    PointCollider(const Point2Df&, float = DOT_DEFAULT_SNAP_RADIUS);
 
     virtual bool intersects(const Collider&) const override;
     virtual bool intersects(const Collider*) const override;
 
+    void set_snap_radius(float radius);
+    float get_snap_radius() const;
 private:
     Point2Df point;
+    float snap_radius;
 
     friend bool intersects(const PointCollider* a, const PointCollider* b);
     friend bool intersects(const PointCollider* a, const BoundingBoxCollider* b);

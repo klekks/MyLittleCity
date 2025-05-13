@@ -84,12 +84,14 @@ bool intersects(const BoundingBoxCollider* a, const BoundingBoxCollider* b)
 
 bool intersects(const PointCollider* a, const PointCollider* b)
 {
-    return std::fabs(a->point.x - b->point.x) < DOT_SNAP_RADIUS && std::fabs(a->point.y - b->point.y) < DOT_SNAP_RADIUS;
+    float snap_radius = std::max(a->snap_radius, b->snap_radius);
+    return std::fabs(a->point.x - b->point.x) < snap_radius && std::fabs(a->point.y - b->point.y) < snap_radius;
 }
 
 bool intersects(const PointCollider* a, const BoundingBoxCollider* b)
 {
-    auto bb_a = BoundingBoxCollider(a->point, {DOT_SNAP_RADIUS, DOT_SNAP_RADIUS}, 0);
+    float snap_radius = a->snap_radius;
+    auto bb_a = BoundingBoxCollider(a->point, {snap_radius, snap_radius}, 0);
     return b->intersects(bb_a);
 }
 
@@ -111,8 +113,8 @@ bool BoundingBoxCollider::intersects(const Collider* other) const
     return false;
 }
 
-PointCollider::PointCollider(const Point2Df &point)
-    : point(point)
+PointCollider::PointCollider(const Point2Df &point, float snap_radius)
+    : point(point), snap_radius(snap_radius)
 {}
 
 bool PointCollider::intersects(const Collider* other) const
@@ -136,4 +138,15 @@ bool PointCollider::intersects(const Collider* other) const
 bool PointCollider::intersects(const Collider& other) const
 {
     return intersects(&other);
+}
+
+
+void PointCollider::set_snap_radius(float radius)
+{
+    snap_radius = radius;
+}
+
+float PointCollider::get_snap_radius() const
+{
+    return snap_radius;
 }
