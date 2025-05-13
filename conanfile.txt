@@ -1,5 +1,6 @@
 [requires]
 sfml/2.6.1
+gtest/[*]
 
 [generators]
 CMakeDeps
