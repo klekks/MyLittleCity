@@ -82,6 +82,17 @@ bool intersects(const BoundingBoxCollider* a, const BoundingBoxCollider* b)
     return true;
 }
 
+bool intersects(const PointCollider* a, const PointCollider* b)
+{
+    return std::fabs(a->point.x - b->point.x) < DOT_SNAP_RADIUS && std::fabs(a->point.y - b->point.y) < DOT_SNAP_RADIUS;
+}
+
+bool intersects(const PointCollider* a, const BoundingBoxCollider* b)
+{
+    auto bb_a = BoundingBoxCollider(a->point, {DOT_SNAP_RADIUS, DOT_SNAP_RADIUS}, 0);
+    return b->intersects(bb_a);
+}
+
 bool BoundingBoxCollider::intersects(const Collider* other) const
 {
     auto bounding_box_collider = dynamic_cast<const BoundingBoxCollider*>(other);
@@ -90,6 +101,39 @@ bool BoundingBoxCollider::intersects(const Collider* other) const
         return ::intersects(this, bounding_box_collider);
     }
 
+    auto point_collider = dynamic_cast<const PointCollider*>(other);
+    if (point_collider)
+    {
+        return ::intersects(point_collider, this);
+    }
+
     throw std::runtime_error("Unknown collider type was passed to BoundingBoxCollider::intersects");
     return false;
+}
+
+PointCollider::PointCollider(const Point2Df &point)
+    : point(point)
+{}
+
+bool PointCollider::intersects(const Collider* other) const
+{
+    auto point_collider = dynamic_cast<const PointCollider*>(other);
+    if (point_collider)
+    {
+        return ::intersects(this, point_collider);
+    }
+
+    auto bounding_box_collider = dynamic_cast<const BoundingBoxCollider*>(other);
+    if (bounding_box_collider)
+    {
+        return ::intersects(this, bounding_box_collider);
+    }
+
+    throw std::runtime_error("Unknown collider type was passed to BoundingBoxCollider::intersects");
+    return false;
+}
+
+bool PointCollider::intersects(const Collider& other) const
+{
+    return intersects(&other);
 }

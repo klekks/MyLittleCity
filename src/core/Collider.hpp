@@ -2,11 +2,13 @@
 
 #include <cmath>
 
+constexpr float DOT_SNAP_RADIUS = 0.01f;
+
 template <typename Type>
 struct Point2D
 {
     Type x = 0, y = 0;
-    Point2D<Type>() {}
+    Point2D() {}
     Point2D(Type x, Type y) : x(x), y(y) {}
 
     template <typename OtherType>
@@ -62,6 +64,8 @@ public:
     virtual bool intersects(const Collider*) const = 0;
 };
 
+class PointCollider;
+
 class BoundingBoxCollider : public Collider 
 {
 public:
@@ -76,4 +80,20 @@ private:
     float rotation;
 
     friend bool intersects(const BoundingBoxCollider* a, const BoundingBoxCollider* b);
+    friend bool intersects(const PointCollider* a, const BoundingBoxCollider* b);
+};
+
+class PointCollider : public Collider 
+{
+public:
+    PointCollider(const Point2Df&);
+
+    virtual bool intersects(const Collider&) const override;
+    virtual bool intersects(const Collider*) const override;
+
+private:
+    Point2Df point;
+
+    friend bool intersects(const PointCollider* a, const PointCollider* b);
+    friend bool intersects(const PointCollider* a, const BoundingBoxCollider* b);
 };
