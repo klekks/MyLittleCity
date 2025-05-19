@@ -36,6 +36,12 @@ struct Point2D
         return {x * other.x, y * other.y};
     }
 
+    template <typename Numeric>
+    Point2D<Type> operator*(const Numeric& other) const
+    {
+        return {x * other, y * other};
+    }
+
     template <typename OtherType>
     Type dot(const Point2D<OtherType>& other) const 
     {

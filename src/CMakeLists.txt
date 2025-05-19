@@ -8,7 +8,7 @@ set(controller_SRC
 )
 
 add_executable(MyLittleCity main.cpp ${controller_SRC})
-target_link_libraries(MyLittleCity sfml-graphics sfml-window sfml-system)
+target_link_libraries(MyLittleCity sfml-graphics sfml-window sfml-system collider)
 
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

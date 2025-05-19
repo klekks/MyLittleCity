@@ -1,3 +1,4 @@
+#pragma once 
 #include "../Renderable.hpp"
 #include "../../game_objects/Crossroad.hpp"
 

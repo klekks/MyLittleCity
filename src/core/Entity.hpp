@@ -1,3 +1,4 @@
+#pragma once
 #include "Collider.hpp"
 #include <memory>
 
@@ -7,6 +8,7 @@ public:
     virtual void update() {}
     virtual bool has_collider() const { return false; }
     virtual const Collider* get_collider() const { return nullptr; }
+    virtual bool is_renderable() const { return false; }
     virtual ~Entity() = default;
 };
 

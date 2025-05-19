@@ -1,3 +1,4 @@
+#pragma once
 #include "../core/Entity.hpp"
 #include "../core/Collider.hpp"
 
