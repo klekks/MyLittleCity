@@ -104,6 +104,26 @@ TEST(BoundingBoxCollider, AssertIfUnknownCollider)
     ASSERT_ANY_THROW(collider1.intersects(unknown_collider));
 }
 
+TEST(BoundingBoxCollider, InitializationWithDifferentConstructorsWithoutRotation)
+{
+    BoundingBoxCollider collider1({0, 0}, {4, 2}, 0);
+    BoundingBoxCollider collider2(2, {0, 2}, {0, -2});
+
+    EXPECT_TRUE(collider1.get_center() == collider2.get_center());
+    EXPECT_TRUE(collider1.get_sizes() == collider2.get_sizes());
+    EXPECT_FLOAT_EQ(collider1.get_rotation(), collider2.get_rotation());
+}
+
+TEST(BoundingBoxCollider, InitializationWithDifferentConstructorsWithRotation)
+{
+    BoundingBoxCollider collider1({0, 0}, {2 * sqrtf(6), 2 * M_SQRT2f}, M_PI_4);
+    BoundingBoxCollider collider2(2 * M_SQRT2f, {3, 3}, {-3, -3});
+    
+    EXPECT_TRUE(collider1.get_center() == collider2.get_center());
+    EXPECT_TRUE(collider1.get_sizes() == collider2.get_sizes());
+    EXPECT_FLOAT_EQ(collider1.get_rotation(), collider2.get_rotation());
+}
+
 TEST(PointCollider, SelfIntersection)
 {
     PointCollider collider({17.f, 42.f});

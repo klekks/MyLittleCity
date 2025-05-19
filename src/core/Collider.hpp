@@ -19,19 +19,19 @@ struct Point2D
     }
 
     template <typename OtherType>
-    Point2D<Type> operator+(const Point2D<OtherType>& other)
+    Point2D<Type> operator+(const Point2D<OtherType>& other) const
     {
         return {x + other.x, y + other.y};
     }
 
     template <typename OtherType>
-    Point2D<Type> operator-(const Point2D<OtherType>& other)
+    Point2D<Type> operator-(const Point2D<OtherType>& other) const
     {
         return {x - other.x, y - other.y};
     }
 
     template <typename OtherType>
-    Point2D<Type> operator*(const Point2D<OtherType>& other)
+    Point2D<Type> operator*(const Point2D<OtherType>& other) const
     {
         return {x * other.x, y * other.y};
     }
@@ -40,6 +40,12 @@ struct Point2D
     Type dot(const Point2D<OtherType>& other) const 
     {
         return x * other.x + y * other.y;
+    }
+
+    template <typename OtherType>
+    Type length(const Point2D<OtherType>& other) const 
+    {
+        return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
     }
 
     Point2D<Type> perpendicular() const 
@@ -51,6 +57,12 @@ struct Point2D
     {
         auto len = std::sqrt(x * x + y * y);
         return {x / len, y / len};
+    }
+
+    template <typename OtherType>
+    bool operator==(const Point2D<OtherType>& other) const 
+    {
+        return (x - other.x) < 0.001f && (y - other.y) < 0.001f;
     }
 };
 
@@ -70,9 +82,14 @@ class BoundingBoxCollider : public Collider
 {
 public:
     BoundingBoxCollider(const Point2Df &center, const Point2Df &sizes, float rotation);
+    BoundingBoxCollider(float width, const Point2Df &coordinates_from, const Point2Df &coordinates_to);
 
     virtual bool intersects(const Collider&) const override;
     virtual bool intersects(const Collider*) const override;
+
+    Point2Df get_center() const { return center; }
+    Point2Df get_sizes() const { return sizes; }
+    float get_rotation() const { return rotation; }
 
 private:
     Point2Df center;

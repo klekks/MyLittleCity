@@ -9,6 +9,17 @@ BoundingBoxCollider::BoundingBoxCollider(const Point2Df &center, const Point2Df 
     : center(center), sizes(sizes), rotation(rotation)
 {}
 
+BoundingBoxCollider::BoundingBoxCollider(float width, const Point2Df &coordinates_from, const Point2Df &coordinates_to)
+    : center((coordinates_from + coordinates_to) * Point2Df{0.5f, 0.5f})
+{
+    auto length = coordinates_from.length(coordinates_to);
+    auto delta = coordinates_from - coordinates_to;
+    auto dx = delta.x, dy = delta.y;
+    auto sin = dx / length;
+    rotation = std::asin(sin);
+    sizes = Point2Df{length, width};
+}
+
 bool BoundingBoxCollider::intersects(const Collider& other) const
 {
     return intersects(&other);
