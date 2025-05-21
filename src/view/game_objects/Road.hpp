@@ -15,14 +15,8 @@ public:
 
     void render(sf::RenderTarget& target) const override
     {
-        const float halfWidth = width / 2.0f;
-
         auto delta = from->coordinates() - to->coordinates();
         float dx = delta.x, dy = delta.y;
-
-        float alpha = atan2f(dy, dx);
-
-        float ax = halfWidth * sinf(alpha), ay = halfWidth * cosf(alpha);
 
         float length = from->coordinates().length(to->coordinates());
 

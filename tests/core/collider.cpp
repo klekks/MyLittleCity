@@ -1,6 +1,10 @@
 #include "../../src/core/Collider.hpp"
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <math.h>
 #include <gtest/gtest.h>
+
 
 class UnknownCollider : public Collider
 {
@@ -107,7 +111,7 @@ TEST(BoundingBoxCollider, AssertIfUnknownCollider)
 TEST(BoundingBoxCollider, InitializationWithDifferentConstructorsWithoutRotation)
 {
     BoundingBoxCollider collider1({0, 0}, {4, 2}, 0);
-    BoundingBoxCollider collider2(2, {0, 2}, {0, -2});
+    BoundingBoxCollider collider2(2, {2, 0}, {-2, 0});
 
     EXPECT_TRUE(collider1.get_center() == collider2.get_center());
     EXPECT_TRUE(collider1.get_sizes() == collider2.get_sizes());
@@ -116,8 +120,8 @@ TEST(BoundingBoxCollider, InitializationWithDifferentConstructorsWithoutRotation
 
 TEST(BoundingBoxCollider, InitializationWithDifferentConstructorsWithRotation)
 {
-    BoundingBoxCollider collider1({0, 0}, {2 * sqrtf(6), 2 * M_SQRT2f}, M_PI_4);
-    BoundingBoxCollider collider2(2 * M_SQRT2f, {3, 3}, {-3, -3});
+    BoundingBoxCollider collider1({0, 0}, {2 * sqrtf(6), 2 * M_SQRT2}, M_PI_4);
+    BoundingBoxCollider collider2(2 * M_SQRT2, {3, 3}, {-3, -3});
     
     EXPECT_TRUE(collider1.get_center() == collider2.get_center());
     EXPECT_TRUE(collider1.get_sizes() == collider2.get_sizes());
