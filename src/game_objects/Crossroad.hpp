@@ -15,7 +15,7 @@ public:
     }
 
     Point2Df coordinates() const { return coordinates_; }
-private:
+protected:
     Point2Df coordinates_;
     float radius = 15.0f;
 };

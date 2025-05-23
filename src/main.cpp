@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include "controller/InputController.hpp"
 #include "core/Entity.hpp"
-#include "game_objects/Crossroad.hpp"
+#include "view/game_objects/Crossroad.hpp"
 // #include "game_objects/Road.hpp"
 #include "view/game_objects/Road.hpp"
 #include <iostream>
@@ -19,11 +19,11 @@ public:
         {
             if (!in_drug)
             {
-                begin_intersection = std::make_shared<Crossroad>(Point2Df{context.mousePosition.x, context.mousePosition.y});
+                begin_intersection = std::make_shared<CrossroadView>(Point2Df{context.mousePosition.x, context.mousePosition.y});
             }
             else
             {
-                end_intersection = std::make_shared<Crossroad>(Point2Df{context.mousePosition.x, context.mousePosition.y});
+                end_intersection = std::make_shared<CrossroadView>(Point2Df{context.mousePosition.x, context.mousePosition.y});
                 road = std::make_shared<RoadView>(begin_intersection, end_intersection);
             }
             in_drug = true;
@@ -31,7 +31,7 @@ public:
         if (event.button == sf::Mouse::Left && event.type == InputEventType::MouseReleased && in_drug)
         {
             in_drug = false;
-            end_intersection = std::make_shared<Crossroad>(Point2Df{context.mousePosition.x, context.mousePosition.y});
+            end_intersection = std::make_shared<CrossroadView>(Point2Df{context.mousePosition.x, context.mousePosition.y});
             road = std::make_shared<RoadView>(begin_intersection, end_intersection);
 
             objects.push_back(begin_intersection);
