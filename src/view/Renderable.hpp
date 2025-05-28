@@ -10,3 +10,13 @@ public:
     virtual bool is_renderable() const final override { return true; }
     virtual ~Renderable() = default;
 };
+
+class Hoverable : virtual public Renderable 
+{
+public:
+    void set_hover_on() { hover_status_ = true; }
+    void set_hover_off() { hover_status_ = false; }
+    bool get_hover_status() const { return hover_status_; }
+private:
+    bool hover_status_ = false;
+};

@@ -50,6 +50,37 @@ private:
     std::shared_ptr<Road> road;
 } command;
 
+class HoverCommand : public InputCommand
+{
+public:
+    void execute(const InputEvent &event, const InputContext &context) override
+    {
+        if (event.type == InputEventType::MouseMoved)
+        {
+            for (auto hovered: hovered_objects)
+                hovered->set_hover_off();
+
+            PointCollider point({context.mousePosition.x, context.mousePosition.y});
+            for (const auto& obj: objects)
+                if (obj->has_collider())
+                {
+                    auto collider = obj->get_collider();
+                    if (collider->intersects(point))
+                    {
+                        auto hover = dynamic_cast<Hoverable*>(obj.get());
+                        if (hover)
+                        {
+                            hover->set_hover_on();
+                            hovered_objects.push_back(hover);
+                        }
+                    }
+                }
+        }
+    }
+private:
+    std::vector<Hoverable*> hovered_objects;
+} hov_comm;
+
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(800, 600), "SFML Application");
@@ -57,6 +88,7 @@ int main()
 
     inputController.bindDrag(sf::Mouse::Left, &command);
     inputController.bind(InputEventType::MouseReleased, &command);
+    inputController.bind(InputEventType::MouseMoved, &hov_comm);
 
     while (window.isOpen())
     {
